@@ -1,0 +1,3 @@
+add_subdirectory(protobuf_test)
+add_subdirectory(cjson_test)
+add_subdirectory(split_segment_test)

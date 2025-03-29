@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+message SemanticMetaValue {
+  string semantic_meta = 1;
+  repeated SemanticSeriesValue series_array = 2;
+}
+
+message SemanticSeriesValue {
+  string series_segment = 1;
+  repeated Sample values = 2;
+}
+
+message Sample {
+  int64 timestamp = 1;
+  repeated double value = 2;
+}
+
+// Compile:
+// protoc --cpp_out=. message.proto
