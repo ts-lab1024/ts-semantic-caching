@@ -170,23 +170,23 @@ There are some differences in the way database addresses are processed between t
 * burn-in: Number of queries to ignore before collecting statistics
 * max-queries: Limit the number of queries to send, 0 = no limit
 
-## Data Transfer format
+## Custom Serialization and Deserialization Methods
 
-### Data encoding
-
-```
-┌───────────────┬─────────────────────┬─────────────────────┬─────┬──────────────┬─────────────────────┬─────────────────────┬─────┐
-│ ts1 <uint64>  │ row_1_col_1 <bytes> │ row_1_col_2 <bytes> │ ... │ts2 <uint64>  │ row_2_col_1 <bytes> │ row_2_col_2 <bytes> │ ... │
-└───────────────┴─────────────────────┴─────────────────────┴─────┴──────────────┴─────────────────────┴─────────────────────┴─────┘
-```
-
-
-### Transfer format
+### Data Points Encoding
 
 ```
-┌──────────────────────┬────────────┬────────────────────┬──────────────────┬─────────────────────────┬────────────────────────────┬────────────┬──────────────────────┬─────┬───────────────────────────────────┬────────────┬──────────────────────┐
-│ StarSegment <string> │ whitespace │ StartTime <uint64> │ EndTime <uint64> │ NumberOfTables <uint64> │ SemanticSegment_1 <string> │ whitespace │ encoded data <bytes> │ ... │ SemanticSegment_NumOfTab <string> │ whitespace │ encoded data <bytes> │
-└──────────────────────┴────────────┴────────────────────┴──────────────────┴─────────────────────────┴────────────────────────────┴────────────┴──────────────────────┴─────┴───────────────────────────────────┴────────────┴──────────────────────┘
+┌───────────────┬─────────────────────┬───────────────┬─────┬──────────────┬─────────────────────┬─────────────────┬─────┐
+│ timestamp1    │   field values1     │  timestamp2   │ ... │ timestampn   │  field values(n)    │ timestamp(n+1)  │ ... │
+└───────────────┴─────────────────────┴───────────────┴─────┴──────────────┴─────────────────────┴─────────────────┴─────┘
+```
+
+
+### Serialization value
+
+```
+┌────────────────────────┬─────────────────────┬─────────────────┬─────┬─────────────────────┬─────────────────────┬─────────────────────────┬─────┐
+│ NumbleofSemanticSeries │  Semantic Series1   │  Data Points1   │ ... │ SemanticSeries(n)   │   Data Points(n)    │  Semantic Series(n+1)   │ ... │
+└────────────────────────┴─────────────────────┴─────────────────┴─────┴─────────────────────┴─────────────────────┴─────────────────────────┴─────┘
 ```
 
 ### Example
@@ -210,28 +210,30 @@ func TestExample(t *testing.T) {
     if err != nil {
         panic(err)
     }
-
+    // Querystring --> SemanticKey (starSegment / semanticSegment) and Time-range [startTime, endTime].
     semanticSegment := GetSemanticSegment(queryString)
     _, startTime, endTime, tags := GetQueryTemplate(queryString)
+
+    // Query result (qry) --> Serialization value (numOfSeries + byteArray)
     partialSegment, fields, metric := SplitPartialSegment(semanticSegment)
     starSegment := GetStarSegment(metric, partialSegment)
     fields = "time[int64]," + fields
     datatypes := GetDataTypeArrayFromSF(fields)
-    numOfTab := GetNumOfTable(response)
+    numOfSeries := GetNumOfTable(response)
     byteArray := ResponseToByteArrayWithParams(response, datatypes, tags, metric, partialSegment)
-
     err = stscacheConn.Set(&stscache.Item{
         Key:         starSegment,
         Value:       byteArray,
         Time_start:  startTime,
         Time_end:    endTime,
-        NumOfTables: int64(numOfTab),
+        NumOfTables: int64(numOfSeries),
     })
     if err != nil {
         panic(err)
     }
-
     values, _, err := stscacheConn.Get(semanticSegment, startTime, endTime)
+
+    //Serialization value -->  query result object (convertedResponse) .
     convertedResponse, flagNum, flagArr, timeRangeArr, tagArr := ByteArrayToResponseWithDatatype(values, datatypes)
 }
 ```
