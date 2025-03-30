@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+option go_package = "./;codec";
+
+package codec;
+
+
+//type SemanticMetaValue struct {
+//    SemanticMeta string
+//    SeriesArray  []SemanticSeriesValue
+//}
+//
+//type SemanticSeriesValue struct {
+//    SeriesSegment string
+//    Values        []Sample
+//}
+//
+//type Sample struct {
+//    Timestamp int64
+//    Value     []float64
+//}
+
+
+message SemanticMetaValue {
+  string semantic_meta = 1;
+  repeated SemanticSeriesValue series_array = 2;
+}
+
+message SemanticSeriesValue {
+  string series_segment = 1;
+  repeated Sample values = 2;
+}
+
+message Sample {
+  int64 timestamp = 1;
+  repeated double value = 2;
+}
+
+// protoc --go_out=. codec.proto
