@@ -1,8 +1,11 @@
 # STsCache
 
 ## Introduction
-This is the source code of STsCache and bench. \
+This is the source code of STsCache (using three serialization methods: custom, Protobuf, and JSON) and Bench.
+
 Bench, built on [TSBS](https://github.com/timescale/tsbs) Expanded, measures throughput, latency, and hit ratio, utilizing [YCSB-TS](https://github.com/TSDBBench/YCSB-TS) and distributions like Latest and Zipfian for workload generation.
+
+Additionally, we also provide the source code of a Grafana integrated with the STsCache client. For detailed usage of Grafana, please refer to [Grafana](https://github.com/grafana/grafana).
 
 ## Dependencies
 
@@ -236,7 +239,3 @@ func TestExample(t *testing.T) {
 	fmt.Println(tagArr)
 }
 ```
-
-## Grafana
-
-We have integrated the STsCache client into Grafana. For detailed usage of Grafana, please refer to [https://github.com/grafana/grafana](https://github.com/grafana/grafana)
